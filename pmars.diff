@@ -1,0 +1,231 @@
+Only in pmars-0.9.2/src: asm.o
+diff -ur pmars/src/cdb.c pmars-0.9.2/src/cdb.c
+--- pmars/src/cdb.c	2000-12-24 19:49:07.000000000 -0500
++++ pmars-0.9.2/src/cdb.c	2017-02-26 17:35:45.444797623 -0500
+@@ -2411,17 +2411,17 @@
+ }
+ #endif
+ 
+-int
++long
+ score(warnum)
+-  int     warnum;
++  long     warnum;
+ {
+-  int     surv, accu = 0;
++  long     surv, accu = 0;
+   long    res;
+ 
+   for (surv = 1; surv <= warriors; ++surv) {
+     set_reg('S', (long) surv);
+     if (eval_expr(SWITCH_eq, &res) < OK_EXPR)
+-      return INT_MIN;                /* hopefully clparse will catch errors
++      return LONG_MIN;                /* hopefully clparse will catch errors
+                                  * earlier */
+     else
+       accu += warrior[warnum].score[surv - 1] * res;
+@@ -2431,11 +2431,11 @@
+ 
+ /* total the number of deaths for warrior[warnum]; the "order of death"
+    array is currently neither reported nor used for the score calculation */
+-int
++long
+ deaths(warnum)
+-  int     warnum;
++  long     warnum;
+ {
+-  int     i, accu = 0;
++  long     i, accu = 0;
+   for (i = warriors; i < 2 * warriors - 1; ++i)
+     accu += warrior[warnum].score[i];
+   return accu;
+@@ -2443,9 +2443,9 @@
+ 
+ void
+ sort_by_score(idxV, scrV)
+-  int    *idxV, *scrV;
++  long    *idxV, *scrV;
+ {
+-  int     sorted, tmp, i;
++  long     sorted, tmp, i;
+   do {
+     sorted = 1;
+     for (i = 0; i < warriors - 1; ++i)
+@@ -2466,8 +2466,8 @@
+ results(outp)
+   FILE   *outp;
+ {
+-  int     idxV[MAXWARRIOR], scrV[MAXWARRIOR];
+-  int     i, j;
++  long     idxV[MAXWARRIOR], scrV[MAXWARRIOR];
++  long     i, j;
+   char    outs[80];
+   long    saveW, saveS;
+ 
+@@ -2490,10 +2490,10 @@
+       if (warriors > 2) {
+         aputs5(resultsAre, NORMAL_ATTR);
+         for (j = 0; j < warriors; ++j) {
+-          sprintf(outs, " %d", warrior[idxV[i]].score[j]);
++          sprintf(outs, " %ld", warrior[idxV[i]].score[j]);
+           aputs5(outs, NORMAL_ATTR);
+         }
+-        sprintf(outs, " %d\n", deaths(idxV[i]));
++        sprintf(outs, " %ld\n", deaths(idxV[i]));
+         aputs5(outs, NORMAL_ATTR);
+       }
+     }
+@@ -2509,9 +2509,9 @@
+       if (warriors > 2) {
+         fprintf(outp, resultsAre);
+         for (j = 0; j < warriors; ++j) {
+-          fprintf(outp, " %d", warrior[idxV[i]].score[j]);
++          fprintf(outp, " %ld", warrior[idxV[i]].score[j]);
+         }
+-        fprintf(outp, " %d\n", deaths(idxV[i]));
++        fprintf(outp, " %ld\n", deaths(idxV[i]));
+       }
+     }
+     if (warriors == 2) {
+@@ -2526,10 +2526,10 @@
+       if (warriors > 2) {
+         grputs(resultsAre);
+         for (j = 0; j < warriors; ++j) {
+-          sprintf(outs, " %d", warrior[idxV[i]].score[j]);
++          sprintf(outs, " %ld", warrior[idxV[i]].score[j]);
+           grputs(outs);
+         }
+-        sprintf(outs, " %d\n", deaths(idxV[i]));
++        sprintf(outs, " %ld\n", deaths(idxV[i]));
+         grputs(outs);
+       }
+     }
+@@ -2564,11 +2564,11 @@
+       if (warriors > 2) {
+         OUTTEXT(resultsAre);
+         for (j = 0; j < warriors; ++j) {
+-          sprintf(outs, " %d", warrior[idxV[i]].score[j]);
++          sprintf(outs, " %ld", warrior[idxV[i]].score[j]);
+           OUTTEXT(outs);
+         }
+         OUTTEXT("\n");
+-        sprintf(outs, " %d\n", deaths(idxV[i]));
++        sprintf(outs, " %ld\n", deaths(idxV[i]));
+         OUTTEXT(outs);
+       }
+     }
+@@ -2601,9 +2601,9 @@
+     if (warriors > 2) {
+       fprintf(outp, resultsAre);
+       for (j = 0; j < warriors; ++j) {
+-        fprintf(outp, " %d", warrior[idxV[i]].score[j]);
++        fprintf(outp, " %ld", warrior[idxV[i]].score[j]);
+       }
+-      fprintf(outp, " %d\n", deaths(idxV[i]));
++      fprintf(outp, " %ld\n", deaths(idxV[i]));
+     }
+   }
+   if (warriors == 2) {
+Only in pmars-0.9.2/src: cdb.o
+Only in pmars-0.9.2/src: clparse.o
+Only in pmars-0.9.2/src: disasm.o
+diff -ur pmars/src/eval.c pmars-0.9.2/src/eval.c
+--- pmars/src/eval.c	2000-12-24 19:49:08.000000000 -0500
++++ pmars-0.9.2/src/eval.c	2017-02-26 17:35:45.444797623 -0500
+@@ -372,7 +372,7 @@
+ }
+ 
+ /*--------------------*/
+-int
++long
+ eval_expr(expr, result)                /* wrapper for eval() */
+   char   *expr;
+   long   *result;
+Only in pmars-0.9.2/src: eval.o
+diff -ur pmars/src/global.h pmars-0.9.2/src/global.h
+--- pmars/src/global.h	2000-12-24 19:56:41.000000000 -0500
++++ pmars-0.9.2/src/global.h	2017-02-26 17:35:45.444797623 -0500
+@@ -279,7 +279,7 @@
+   int     instLen;                /* Length of instBank */
+   int     offset;                /* Offset value specified by 'ORG' or 'END'.
+                                  * 0 is default */
+-  short   score[MAXWARRIOR * 2 - 1];
++  long   score[MAXWARRIOR * 2 - 1];
+ 
+   char   *name;                        /* warrior name */
+   char   *version;
+@@ -402,15 +402,15 @@
+ 
+ extern int
+         parse_param(int argc, char *argv[]);
+-extern int eval_expr(char *expr, long *result);
++extern long eval_expr(char *expr, long *result);
+ extern int assemble(char *fName, int aWarrior);
+ extern void disasm(mem_struct * cells, ADDR_T n, ADDR_T offset);
+ extern void simulator1(void);
+ extern char *locview(ADDR_T loc, char *outp);
+ extern int cdb(char *msg);
+-extern int score(int warnum);
+-extern void sort_by_score(int *idxV, int *scrV);
+-extern int deaths(int warnum);
++extern long score(long warnum);
++extern void sort_by_score(long *idxV, long *scrV);
++extern long deaths(long warnum);
+ extern void results(FILE * outp);
+ extern void sort_by_score();
+ extern void Exit(int code);
+Only in pmars-0.9.2/src: global.o
+diff -ur pmars/src/Makefile pmars-0.9.2/src/Makefile
+--- pmars/src/Makefile	2000-12-24 07:53:39.000000000 -0500
++++ pmars-0.9.2/src/Makefile	2017-02-26 17:36:39.012980958 -0500
+@@ -16,11 +16,12 @@
+ # (6)   -DXWINGRAPHX    1                   X-Windows graphics (UNIX)
+ # (7)   -DPERMUTATE                         enables -P switch
+ 
+-CFLAGS = -O -DEXT94 -DXWINGRAPHX -DPERMUTATE
++CFLAGS = -O -DEXT94 -DSERVER -DPERMUTATE
+ LFLAGS = -x
++LIB = -lncurses
+ # LIB = -lcurses -ltermlib		# enable this one for curses display
+ # LIB = -lvgagl -lvga			# enable this one for Linux/SVGA
+-LIB = -L/usr/X11R6/lib -lX11		# enable this one for X11
++# LIB = -L/usr/X11R6/lib -lX11		# enable this one for X11
+ 
+ .SUFFIXES: .o .c .c~ .man .doc .6
+ MAINFILE = pmars
+diff -ur pmars/src/Makefile.djg pmars-0.9.2/src/Makefile.djg
+--- pmars/src/Makefile.djg	2000-12-24 07:53:39.000000000 -0500
++++ pmars-0.9.2/src/Makefile.djg	2017-02-26 17:35:45.444797623 -0500
+@@ -10,9 +10,9 @@
+ # (3)   -DEXT94                             ICWS'94 + SEQ,SNE,NOP,*,{,}
+ # (4)   -DSMALLMEM                          16-bit addresses, less memory
+ # (5)   -DPERMUTATE                         enables -P switch
+-CFLAGS = -O2 -m486 -DGRAPHX -DEXT94 -DPERMUTATE
++CFLAGS = -O2 -DSERVER -DEXT94 -DPERMUTATE
+ # only tested with PDCurses (-lcurses)
+-LIB = -lgrx -lpc
++#LIB = -lgrx -lpc
+ 
+ .SUFFIXES: .o .c
+ 
+@@ -29,11 +29,9 @@
+ 	@echo Making $(MAINFILE) with compiler flags $(CFLAGS)
+ 
+ $(MAINFILE): $(OBJ1) $(OBJ2) $(OBJ3)
+-    @echo Linking $(MAINFILE)
+-    @$(CC) -o $(MAINFILE) $(OBJ1) $(OBJ2) $(OBJ3) $(LIB)
+-    @strip $(MAINFILE)
+-    @aout2exe $(MAINFILE)
+-    @echo done
++	@echo Linking $(MAINFILE)
++	@$(CC) -o $(MAINFILE) $(OBJ1) $(OBJ2) $(OBJ3) $(LIB)
++	@echo done
+ 
+ 
+ token.o asm.o disasm.o: asm.h
+Only in pmars-0.9.2/src: pmars
+Only in pmars-0.9.2/src: pmars.o
+Only in pmars-0.9.2/src: pos.o
+Only in pmars-0.9.2/src: sim.o
+Only in pmars-0.9.2/src: str_eng.o
+Only in pmars-0.9.2/src: token.o
