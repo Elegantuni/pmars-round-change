@@ -4,7 +4,7 @@ Example: <br />
 pmars -r 100000 &lt;warrior1&gt; &lt;warrior2&gt; <br />
 It is possible to use a million rounds now though the example uses one hundred thousand. <br />
 
-To patch put in same directory as the src directoy. <br />
+To patch put in same directory as the src directory. <br />
 For Linux: <br />
 patch -p1 < pmars.diff <br />
 <br />
