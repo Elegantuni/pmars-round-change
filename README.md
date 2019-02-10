@@ -11,3 +11,7 @@ patch -p1 < pmars.diff <br />
 For Minix 3: <br />
 patch -p1 < pmars-minix3.diff <br />
 
+For clang on Linux:
+To patch put in same directory as the directory of the src directory <br />
+patch -p1 < pmars-clang.diff
+
