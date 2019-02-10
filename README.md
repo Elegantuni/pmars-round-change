@@ -10,8 +10,16 @@ patch -p1 < pmars.diff <br />
 <br />
 For Minix 3: <br />
 patch -p1 < pmars-minix3.diff <br />
-
-For clang on Linux:
+<br />
+For clang on Linux: <br />
 To patch put in same directory as the directory of the src directory <br />
-patch -p1 < pmars-clang.diff
+patch -p1 < pmars-clang.diff <br />
+<br />
+For msys2: <br />
+Install: <br />
+pacman -S base-devel <br />
+pacman -S mingw-w64-x86_64-toolchain <br />
+pacmna -S git <br />
+To patch put in same directory as the directory of the src directory <br />
+patch -p1 < pmars-msys2.diff <br />
 
