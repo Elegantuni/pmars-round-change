@@ -1,0 +1,1273 @@
+diff -ruN pmars-0.9.4/src/Makefile pmars-0.9.4-modified/src/Makefile
+--- pmars-0.9.4/src/Makefile	2022-06-17 19:28:33.000000000 -0400
++++ pmars-0.9.4-modified/src/Makefile	2023-06-06 09:39:30.958771456 -0400
+@@ -17,7 +17,7 @@
+ # (7)   -DPERMUTATE                         enables -P switch
+ # (9)   -DRWLIMIT                           enables read/write limits
+ 
+-CFLAGS = -O -DEXT94 -DXWINGRAPHX -DPERMUTATE -DRWLIMIT 
++CFLAGS = -O -DEXT94 -DSERVER -DPERMUTATE -DRWLIMIT 
+ LFLAGS = -x
+ # LIB = -lcurses -ltermlib		# enable this one for curses display
+ # LIB = -lvgagl -lvga			# enable this one for Linux/SVGA
+diff -ruN pmars-0.9.4/src/Makefile.djg pmars-0.9.4-modified/src/Makefile.djg
+--- pmars-0.9.4/src/Makefile.djg	2000-12-24 07:53:39.000000000 -0500
++++ pmars-0.9.4-modified/src/Makefile.djg	2023-06-06 09:38:46.746068740 -0400
+@@ -10,9 +10,9 @@
+ # (3)   -DEXT94                             ICWS'94 + SEQ,SNE,NOP,*,{,}
+ # (4)   -DSMALLMEM                          16-bit addresses, less memory
+ # (5)   -DPERMUTATE                         enables -P switch
+-CFLAGS = -O2 -m486 -DGRAPHX -DEXT94 -DPERMUTATE
++CFLAGS = -O2 -DSERVER -DEXT94 -DPERMUTATE
+ # only tested with PDCurses (-lcurses)
+-LIB = -lgrx -lpc
++#LIB = -lgrx -lpc
+ 
+ .SUFFIXES: .o .c
+ 
+@@ -29,11 +29,9 @@
+ 	@echo Making $(MAINFILE) with compiler flags $(CFLAGS)
+ 
+ $(MAINFILE): $(OBJ1) $(OBJ2) $(OBJ3)
+-    @echo Linking $(MAINFILE)
+-    @$(CC) -o $(MAINFILE) $(OBJ1) $(OBJ2) $(OBJ3) $(LIB)
+-    @strip $(MAINFILE)
+-    @aout2exe $(MAINFILE)
+-    @echo done
++	@echo Linking $(MAINFILE)
++	@$(CC) -o $(MAINFILE) $(OBJ1) $(OBJ2) $(OBJ3) $(LIB)
++	@echo done
+ 
+ 
+ token.o asm.o disasm.o: asm.h
+diff -ruN pmars-0.9.4/src/Makefile.orig pmars-0.9.4-modified/src/Makefile.orig
+--- pmars-0.9.4/src/Makefile.orig	1969-12-31 19:00:00.000000000 -0500
++++ pmars-0.9.4-modified/src/Makefile.orig	2023-06-06 09:38:46.742068676 -0400
+@@ -0,0 +1,64 @@
++# generic UNIX makefile
++CC = gcc			# req. for linux
++#CC = cc				# if you don't have gcc
++# Configuration options:
++#
++# No.   Name            Incompatible with   Description
++# (1)   -DSERVER        2                   disables cdb debugger (koth server 
++#                                           version)
++# (2)   -DGRAPHX        1                   enables platform specific core 
++#                                           graphics
++# (3)   -DKEYPRESS                          only for curses display on SysV:
++#                                           enter cdb upon keypress (use if
++#                                           Ctrl-C doesn't work)
++# (4)   -DEXT94                             ICWS'94 + SEQ,SNE,NOP,*,{,}
++# (5)   -DSMALLMEM                          16-bit addresses, less memory
++# (6)   -DXWINGRAPHX    1                   X-Windows graphics (UNIX)
++# (7)   -DPERMUTATE                         enables -P switch
++# (9)   -DRWLIMIT                           enables read/write limits
++
++CFLAGS = -O -DEXT94 -DXWINGRAPHX -DPERMUTATE -DRWLIMIT 
++LFLAGS = -x
++# LIB = -lcurses -ltermlib		# enable this one for curses display
++# LIB = -lvgagl -lvga			# enable this one for Linux/SVGA
++LIB = -L/usr/X11R6/lib -lX11		# enable this one for X11
++
++.SUFFIXES: .o .c .c~ .man .doc .6
++MAINFILE = pmars
++
++HEADER = global.h config.h asm.h sim.h 
++OBJ1 = pmars.o asm.o eval.o disasm.o cdb.o sim.o pos.o
++OBJ2 = clparse.o global.o token.o 
++OBJ3 = str_eng.o
++
++all: flags $(MAINFILE)
++
++flags:
++	@echo Making $(MAINFILE) with compiler flags $(CFLAGS)
++
++$(MAINFILE): $(OBJ1) $(OBJ2) $(OBJ3)
++	@echo Linking $(MAINFILE)
++	@$(CC) -o $(MAINFILE) $(OBJ1) $(OBJ2) $(OBJ3) $(LIB)
++	@strip $(MAINFILE)
++	@echo done
++
++token.o asm.o disasm.o: asm.h
++
++sim.o cdb.o pos.o disasm.o: sim.h
++
++sim.o: curdisp.c uidisp.c lnxdisp.c xwindisp.c
++
++xwindisp.c: xwindisp.h pmarsicn.h
++
++lnxdisp.c: lnxdisp.h
++
++$(OBJ1) $(OBJ2) $(OBJ3): Makefile config.h global.h
++
++.c.o:
++	@echo Compiling $*.o 
++	@$(CC) $(CFLAGS) -c $*.c
++
++
++clean:
++	rm -f $(OBJ1) $(OBJ2) $(OBJ3) core
++
+diff -ruN pmars-0.9.4/src/Makefile.rej pmars-0.9.4-modified/src/Makefile.rej
+--- pmars-0.9.4/src/Makefile.rej	1969-12-31 19:00:00.000000000 -0500
++++ pmars-0.9.4-modified/src/Makefile.rej	2023-06-06 09:38:46.746068740 -0400
+@@ -0,0 +1,17 @@
++--- pmars/src/Makefile	2000-12-24 07:53:39.000000000 -0500
+++++ pmars-0.9.4/src/Makefile	2017-02-26 17:36:39.012980958 -0500
++@@ -16,11 +16,12 @@
++ # (6)   -DXWINGRAPHX    1                   X-Windows graphics (UNIX)
++ # (7)   -DPERMUTATE                         enables -P switch
++ 
++-CFLAGS = -O -DEXT94 -DXWINGRAPHX -DPERMUTATE
+++CFLAGS = -O -DEXT94 -DSERVER -DPERMUTATE
++ LFLAGS = -x
+++LIB = -lncurses
++ # LIB = -lcurses -ltermlib		# enable this one for curses display
++ # LIB = -lvgagl -lvga			# enable this one for Linux/SVGA
++-LIB = -L/usr/X11R6/lib -lX11		# enable this one for X11
+++# LIB = -L/usr/X11R6/lib -lX11		# enable this one for X11
++ 
++ .SUFFIXES: .o .c .c~ .man .doc .6
++ MAINFILE = pmars
+Binary files pmars-0.9.4/src/asm.o and pmars-0.9.4-modified/src/asm.o differ
+diff -ruN pmars-0.9.4/src/cdb.c pmars-0.9.4-modified/src/cdb.c
+--- pmars-0.9.4/src/cdb.c	2022-06-17 19:25:46.000000000 -0400
++++ pmars-0.9.4-modified/src/cdb.c	2023-06-06 09:38:46.730068485 -0400
+@@ -2411,17 +2411,17 @@
+ }
+ #endif
+ 
+-int
++long
+ score(warnum)
+-  int     warnum;
++  long     warnum;
+ {
+-  int     surv, accu = 0;
++  long     surv, accu = 0;
+   long    res;
+ 
+   for (surv = 1; surv <= warriors; ++surv) {
+     set_reg('S', (long) surv);
+     if (eval_expr(SWITCH_eq, &res) < OK_EXPR)
+-      return INT_MIN;                /* hopefully clparse will catch errors
++      return LONG_MIN;                /* hopefully clparse will catch errors
+                                  * earlier */
+     else
+       accu += warrior[warnum].score[surv - 1] * res;
+@@ -2431,11 +2431,11 @@
+ 
+ /* total the number of deaths for warrior[warnum]; the "order of death"
+    array is currently neither reported nor used for the score calculation */
+-int
++long
+ deaths(warnum)
+-  int     warnum;
++  long     warnum;
+ {
+-  int     i, accu = 0;
++  long     i, accu = 0;
+   for (i = warriors; i < 2 * warriors - 1; ++i)
+     accu += warrior[warnum].score[i];
+   return accu;
+@@ -2443,9 +2443,9 @@
+ 
+ void
+ sort_by_score(idxV, scrV)
+-  int    *idxV, *scrV;
++  long    *idxV, *scrV;
+ {
+-  int     sorted, tmp, i;
++  long     sorted, tmp, i;
+   do {
+     sorted = 1;
+     for (i = 0; i < warriors - 1; ++i)
+@@ -2466,8 +2466,8 @@
+ results(outp)
+   FILE   *outp;
+ {
+-  int     idxV[MAXWARRIOR], scrV[MAXWARRIOR];
+-  int     i, j;
++  long     idxV[MAXWARRIOR], scrV[MAXWARRIOR];
++  long     i, j;
+   char    outs[80];
+   long    saveW, saveS;
+ 
+@@ -2490,10 +2490,10 @@
+       if (warriors > 2) {
+         aputs5(resultsAre, NORMAL_ATTR);
+         for (j = 0; j < warriors; ++j) {
+-          sprintf(outs, " %d", warrior[idxV[i]].score[j]);
++          sprintf(outs, " %ld", warrior[idxV[i]].score[j]);
+           aputs5(outs, NORMAL_ATTR);
+         }
+-        sprintf(outs, " %d\n", deaths(idxV[i]));
++        sprintf(outs, " %ld\n", deaths(idxV[i]));
+         aputs5(outs, NORMAL_ATTR);
+       }
+     }
+@@ -2509,9 +2509,9 @@
+       if (warriors > 2) {
+         fprintf(outp, resultsAre);
+         for (j = 0; j < warriors; ++j) {
+-          fprintf(outp, " %d", warrior[idxV[i]].score[j]);
++          fprintf(outp, " %ld", warrior[idxV[i]].score[j]);
+         }
+-        fprintf(outp, " %d\n", deaths(idxV[i]));
++        fprintf(outp, " %ld\n", deaths(idxV[i]));
+       }
+     }
+     if (warriors == 2) {
+@@ -2526,10 +2526,10 @@
+       if (warriors > 2) {
+         grputs(resultsAre);
+         for (j = 0; j < warriors; ++j) {
+-          sprintf(outs, " %d", warrior[idxV[i]].score[j]);
++          sprintf(outs, " %ld", warrior[idxV[i]].score[j]);
+           grputs(outs);
+         }
+-        sprintf(outs, " %d\n", deaths(idxV[i]));
++        sprintf(outs, " %ld\n", deaths(idxV[i]));
+         grputs(outs);
+       }
+     }
+@@ -2564,11 +2564,11 @@
+       if (warriors > 2) {
+         OUTTEXT(resultsAre);
+         for (j = 0; j < warriors; ++j) {
+-          sprintf(outs, " %d", warrior[idxV[i]].score[j]);
++          sprintf(outs, " %ld", warrior[idxV[i]].score[j]);
+           OUTTEXT(outs);
+         }
+         OUTTEXT("\n");
+-        sprintf(outs, " %d\n", deaths(idxV[i]));
++        sprintf(outs, " %ld\n", deaths(idxV[i]));
+         OUTTEXT(outs);
+       }
+     }
+@@ -2601,9 +2601,9 @@
+     if (warriors > 2) {
+       fprintf(outp, resultsAre);
+       for (j = 0; j < warriors; ++j) {
+-        fprintf(outp, " %d", warrior[idxV[i]].score[j]);
++        fprintf(outp, " %ld", warrior[idxV[i]].score[j]);
+       }
+-      fprintf(outp, " %d\n", deaths(idxV[i]));
++      fprintf(outp, " %ld\n", deaths(idxV[i]));
+     }
+   }
+   if (warriors == 2) {
+Binary files pmars-0.9.4/src/cdb.o and pmars-0.9.4-modified/src/cdb.o differ
+Binary files pmars-0.9.4/src/clparse.o and pmars-0.9.4-modified/src/clparse.o differ
+Binary files pmars-0.9.4/src/disasm.o and pmars-0.9.4-modified/src/disasm.o differ
+diff -ruN pmars-0.9.4/src/eval.c pmars-0.9.4-modified/src/eval.c
+--- pmars-0.9.4/src/eval.c	2022-06-18 05:45:56.000000000 -0400
++++ pmars-0.9.4-modified/src/eval.c	2023-06-06 09:38:46.734068549 -0400
+@@ -399,7 +399,7 @@
+ }
+ 
+ /*--------------------*/
+-int
++long
+ eval_expr(expr, result)                /* wrapper for eval() */
+   char   *expr;
+   long   *result;
+diff -ruN pmars-0.9.4/src/eval.c.orig pmars-0.9.4-modified/src/eval.c.orig
+--- pmars-0.9.4/src/eval.c.orig	1969-12-31 19:00:00.000000000 -0500
++++ pmars-0.9.4-modified/src/eval.c.orig	2022-06-18 05:45:56.000000000 -0400
+@@ -0,0 +1,435 @@
++/* pMARS -- a portable Memory Array Redcode Simulator
++ * Copyright (C) 1993-1996 Albert Ma, Na'ndor Sieben, Stefan Strack and Mintardjo Wangsawidjaja
++ * Copyright (C) 2000 Ilmari Karonen
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ */
++
++/*
++ * eval.c: expression evaluator used by assembler and debugger
++ * $Id: eval.c,v 1.3 2000/12/25 00:49:08 iltzu Exp $
++ */
++
++#include <ctype.h>
++
++#include "global.h"
++
++/*
++ * eval_expr - arithmetic expression evaluator
++ * by Stefan Strack, version 3 (pMARS v0.4.0+)
++ *
++ * usage:
++ *
++ * int eval_expr(char *expr, long *result); returns 0 if expression is ok, -1 if
++ * bad, -2 if attempted division by zero expr must be null-terminated and can
++ * contain whitespace characters (\t \n)
++ *
++ * -recursion-based -supports arbitrary levels of precedence and parentheses
++ * -supports nested unary minus and plus: 3--2 = 3-(-2) = 5
++ * -arithmetic operators: +,-,*,/,%,=
++ * -26 registers named "a" thru "z", assignment operator =
++ * -C-like comparison and logic operators: ==,!=,<,>,<=,>=,&&,||
++ *
++ */
++
++#define STANDALONE 0
++#define BIGNUM 20                /* largest number taken */
++
++/* two-char operators */
++enum {
++  EQUAL, NEQU, GTE, LTE, AND, OR, IDENT
++};
++
++#ifdef DEBUG
++#define X(c) (c==IDENT ? '#' :\
++              (c==EQUAL ? '=' :\
++               (c==AND ? '&' :\
++                (c==OR ? '|' :\
++                 (c)))))
++#endif
++
++#define TERMINAL(c) (((c)==')' || !(c)) ? 1 : 0)
++/* order of precedence (high to low):
++   * / %
++   + -
++   > < == != >= <=
++   &&
++   ||
++   =
++ */
++#define PRECEDENCE(op) (op=='*' || op=='/' || op=='%' ? 5 :\
++                        (op=='+' || op=='-' ? 4 :\
++                         (op=='>' || op=='<' || op==EQUAL || op==NEQU\
++                                  || op==GTE || op==LTE ? 3 :\
++                          (op==AND ? 2 : (op==OR ? 1 : 0)))))
++#define SKIP_SPACE(e) while(isspace(*(e))) ++(e)
++
++/* function prototypes */
++#ifdef NEW_STYLE
++char   *eval(int prevPrec, long val, char operator, char *expr, long *result);
++char   *getreg(char *expr, int regId, long *val);
++char   *getval(char *expr, long *val);
++char   *getop(char *expr, char *op);
++long    calc(long x, long y, int op);
++#else
++char   *eval();
++char   *getreg();
++char   *getval();
++char   *getop();
++long    calc();
++#endif
++
++/* global error flag */
++int     evalerr;
++
++/* registers */
++
++static long regAr[26];
++
++/* kludge to implement several precedence levels - saveOper works like "push back" in token parsers */
++
++char    saveOper = 0;
++
++/*--------------------*/
++long
++calc(x, y, op)
++  long    x;
++  long    y;
++  int     op;
++{
++  long    z;
++
++  switch (op) {
++  case '+':
++    if (evalerr == OK_EXPR && (x > 0 ?
++                               y > 0 && x > LONG_MAX - y :
++                               y < 0 && x < LONG_MIN - y ))
++      evalerr = OVERFLOW;
++    z = x + y;
++    break;
++  case '-':
++    if (evalerr == OK_EXPR && (x > 0 ?
++                               y < 0 && x > LONG_MAX + y :
++                               y > 0 && x < LONG_MIN + y ))
++      evalerr = OVERFLOW;
++    z = x - y;
++    break;
++  case '/':
++    if (y == 0) {
++      evalerr = DIV_ZERO;
++      z = 0;
++    } else
++      z = x / y;
++    break;
++  case '*':
++    if (evalerr == OK_EXPR && x != 0 && y != 0 &&
++        x != -1 && y != -1 &&    /* LONG_MIN/(-1) causes FP error! */
++	x != 1 && y != 1 &&	/* LONG_MIN/(+1) causes FP error on an Alpha! */
++        ((x > 0) == (y > 0) ?   /* (even though it shouldn't.) */
++         LONG_MAX / y / x == 0 :
++         LONG_MIN / y / x == 0 ))
++      evalerr = OVERFLOW;
++    z = x * y;
++    break;
++  case '%':
++    if (y == 0) {
++      evalerr = DIV_ZERO;
++      z = 0;
++    } else
++      z = x % y;
++    break;
++  case AND:
++    z = x && y;
++    break;
++  case OR:
++    z = x || y;
++    break;
++  case EQUAL:
++    z = x == y;
++    break;
++  case NEQU:
++    z = x != y;
++    break;
++  case '<':
++    z = x < y;
++    break;
++  case '>':
++    z = x > y;
++    break;
++  case LTE:
++    z = x <= y;
++    break;
++  case GTE:
++    z = x >= y;
++    break;
++  case IDENT:                        /* the right-identity operator, used for
++                                 * initial call to eval() */
++    z = y;
++    break;
++  default:
++    z = 0;
++    evalerr = BAD_EXPR;
++  }
++  return z;
++}
++
++/*--------------------*/
++char   *
++getop(expr, oper)
++  char   *expr;
++  char   *oper;
++{
++  char    ch;
++  switch (ch = *(expr++)) {
++  case '&':
++    if (*(expr++) == '&')
++      *oper = AND;
++    break;
++  case '|':
++    if (*(expr++) == '|')
++      *oper = OR;
++    break;
++  case '=':
++    if (*(expr++) == '=')
++      *oper = EQUAL;
++    break;
++  case '!':
++    if (*(expr++) == '=')
++      *oper = NEQU;
++    break;
++  case '<':
++    if (*expr == '=') {
++      ++expr;
++      *oper = LTE;
++    } else
++      *oper = '<';
++    break;
++  case '>':
++    if (*expr == '=') {
++      ++expr;
++      *oper = GTE;
++    } else
++      *oper = '>';
++    break;
++  default:
++    *oper = ch;
++    break;
++  }
++  return expr;
++}
++/*--------------------*/
++char   *
++getreg(expr, regId, val)
++  char   *expr;
++  int     regId;
++  long   *val;
++{
++  SKIP_SPACE(expr);
++  if (*expr == '=' && *(expr + 1) != '=') {        /* assignment, not equality */
++    expr = eval(-1, 0L, IDENT, expr + 1, val);
++    regAr[regId] = *val;
++  } else
++    *val = regAr[regId];
++  return expr;
++}
++
++/*--------------------*/
++char   *
++getval(expr, val)
++  char   *expr;
++  long   *val;
++{
++  char    buffer[BIGNUM];
++  int     regId;
++  int     bufptr = 0;
++  long    accum;
++
++  SKIP_SPACE(expr);
++  if (*expr == '(') {                /* parenthetical expression */
++    expr = eval(-1, 0L, IDENT, expr + 1, val);
++    if (*expr != ')')
++      evalerr = BAD_EXPR;
++    return expr + 1;
++  }
++  if (*expr == '-') {                /* unary minus */
++    expr = getval(expr + 1, &accum);
++    *val = accum * -1;
++    return expr;
++  } else if (*expr == '!') {        /* logical NOT */
++    expr = getval(expr + 1, &accum);
++    *val = (accum ? 0 : 1);
++    return expr;
++  } else if (*expr == '+')        /* unary plus */
++    return getval(expr + 1, val);
++  else if (((regId = (int) toupper(*expr)) >= 'A') && (regId <= 'Z'))
++    return getreg(expr + 1, regId - 'A', val);
++  else
++    while (isdigit(*expr) && bufptr < BIGNUM) /* FIXED (?): possible buffer overflow without the bufptr < BIGNUM? */
++      buffer[bufptr++] = *expr++;
++  if (bufptr == 0)
++    evalerr = BAD_EXPR;                /* no digits */
++  buffer[bufptr] = 0;
++  sscanf(buffer, "%ld", val); /* FIXME wouldn't it be simpler and more efficient to calculate val directly, ie val = val*10+digitvalueof(*expr++) in the loop? */
++  return expr;
++}
++
++/*--------------------*/
++#ifdef NEW_STYLE
++char   *
++eval(int prevPrec, long val1, char oper1, char *expr, long *result)
++#else
++char   *
++eval(prevPrec, val1, oper1, expr, result)
++  int     prevPrec;/* prevPrec is the precedence that ends the subevaluation, ie in 1 && 2+3*4-1 || 0 prevPrec would be prec of && while evaluating 2+3*4-1 */
++  char    oper1, *expr;
++  long    val1, *result;
++#endif
++{
++  long    result2, val2;
++  char    oper2;
++  int     prec1, prec2;
++
++#ifdef DEBUG
++      fprintf(stderr, "eval prev = %ld, val1 = %ld, op1 = %c \n", prevPrec, val1, X(oper1));
++#endif
++
++  saveOper = 0;
++
++  expr = getval(expr, &val2);
++  SKIP_SPACE(expr);
++  if (TERMINAL(*expr)) {        /* trivial: expr is number or () */
++    *result = calc(val1, val2, oper1);
++    return expr;
++  }
++  expr = getop(expr, &oper2);
++
++  if ((prec1 = PRECEDENCE(oper1)) >= (prec2 = PRECEDENCE(oper2))) {
++    if (prec2 > prevPrec /* don't understand this, so I removed it: || prec1 <= prevPrec */) {
++      /* continue to gobble up expressions */
++
++#ifdef DEBUG
++      fprintf(stderr, "gobble prev = %ld, val1 = %ld, op1 = %c, val2 = %ld, op2 = %c \n", prevPrec, val1, X(oper1), val2, X(oper2));
++#endif
++
++      expr = eval(prevPrec, calc(val1, val2, oper1), oper2, expr, result);/* prec1 -> prevPrec */
++
++#ifdef DEBUG
++      fprintf(stderr, "gobbled (prev %ld) %ld = ((%ld %c %ld) %c ..)\n", prevPrec, *result, val1, X(oper1), val2, X(oper2));
++#endif
++
++    } else {
++      /* return from subevaluation of terms with higher precedence */
++      *result = calc(val1, val2, oper1);
++      saveOper = oper2;/* akin to "push back" in parsers */
++
++#ifdef DEBUG
++      fprintf(stderr, "return (prev %ld, save = %c) %ld = (%ld %c %ld)\n", prevPrec, X(saveOper), *result, val1, X(oper1), val2);
++#endif
++
++    }
++  } else {
++
++#ifdef DEBUG
++      fprintf(stderr, "subevaluate op2, prev = %ld, val1 = %ld, op1 = %c, val2 = %ld, op2 = %c, saveOp = %c (%ld) \n", prevPrec, val1, X(oper1), val2, X(oper2), X(saveOper), saveOper);
++#endif
++
++    expr = eval(prec1, val2, oper2, expr, &result2);/* start subevaluation starting from val2 op2 */
++    *result = calc(val1, result2, oper1);
++
++#ifdef DEBUG
++      fprintf(stderr, "returned from subeval, result2 = %ld, result = %ld, prev = %ld, val1 = %ld, op1 = %c, val2 = %ld, op2 = %c, saveOp = %c (%ld) \n", result2, *result, prevPrec, val1, X(oper1), val2, X(oper2), X(saveOper), saveOper);
++#endif
++
++      if (saveOper && PRECEDENCE(saveOper) >= prevPrec) {/* otherwise (if saveOper, but precedence < prevPrec) yet more nested subevalutions to return from */
++
++#ifdef DEBUG
++      fprintf(stderr, "evaluate saveOper, prev = %ld, val1 = %ld, op1 = %c \n", prevPrec, *result , X(saveOper));
++#endif
++
++      expr = eval(prevPrec, *result, saveOper, expr, result);/* prec2 -> prevPrec */
++
++#ifdef DEBUG
++      fprintf(stderr, "return, no more subevals (prev %ld, old Saved: %c (%ld)) %ld = .. ? (%ld %c (%ld %c ..))\n", prevPrec, X(saveOper), saveOper, *result,
++              val1, X(oper1), val2, X(oper2));
++#endif
++
++      /* saveOper = 0; */ /* FIXED don't erase history, continue if saveOper exists */
++    }
++
++#ifdef DEBUG
++    else
++      fprintf(stderr, "return, no saveOp or more subevals (prev %ld, saveOp = %c (%ld)) %ld = (%ld %c (%ld %c ..))\n", prevPrec, X(saveOper), saveOper, *result, val1, X(oper1), val2, X(oper2));
++#endif
++
++  }
++
++  return expr;
++}
++
++/*--------------------*/
++void
++reset_regs()
++{
++  register int idx;
++
++  for (idx = 0; idx < 26; ++idx)
++    regAr[idx] = 0L;
++}
++
++/*--------------------*/
++
++void
++set_reg(regChr, val)
++  char    regChr;
++  long    val;
++{
++  regAr[regChr - 'A'] = val;
++}
++
++/*--------------------*/
++int
++eval_expr(expr, result)                /* wrapper for eval() */
++  char   *expr;
++  long   *result;
++{
++#ifdef DEBUG
++      fprintf(stderr, "* eval *\n");
++#endif
++  evalerr = OK_EXPR;
++  if (*eval(-1, 0L, IDENT, expr, result) != 0)
++    evalerr = BAD_EXPR;                /* still chars left */
++  return (evalerr);
++}
++
++#if STANDALONE
++/*--------------------*/
++void
++main()
++{                                /* test evaluator */
++  char    expr[80];
++  long    result;
++  int     err;
++
++  printf("Enter infix expression: ");
++  gets(expr);
++
++  if ((err = eval_expr(expr, &result)) >= OK_EXPR)
++    printf("Evaluation result:      %ld\n", result);
++  else if (err == DIV_ZERO)
++    printf("Division by zero in %s\n", expr);
++  else if (err == BAD_EXPR)
++    printf("Bad expression %s\n", expr);
++}
++#endif
+Binary files pmars-0.9.4/src/eval.o and pmars-0.9.4-modified/src/eval.o differ
+diff -ruN pmars-0.9.4/src/global.h pmars-0.9.4-modified/src/global.h
+--- pmars-0.9.4/src/global.h	2022-07-04 14:55:37.000000000 -0400
++++ pmars-0.9.4-modified/src/global.h	2023-06-06 09:38:46.738068613 -0400
+@@ -283,7 +283,7 @@
+   int     instLen;                /* Length of instBank */
+   int     offset;                /* Offset value specified by 'ORG' or 'END'.
+                                  * 0 is default */
+-  short   score[MAXWARRIOR * 2 - 1];
++  long   score[MAXWARRIOR * 2 - 1];
+ 
+   char   *name;                        /* warrior name */
+   char   *version;
+@@ -415,15 +415,15 @@
+ 
+ extern int
+         parse_param(int argc, char *argv[]);
+-extern int eval_expr(char *expr, long *result);
++extern long eval_expr(char *expr, long *result);
+ extern int assemble(char *fName, int aWarrior);
+ extern void disasm(mem_struct * cells, ADDR_T n, ADDR_T offset);
+ extern void simulator1(void);
+ extern char *locview(ADDR_T loc, char *outp);
+ extern int cdb(char *msg);
+-extern int score(int warnum);
+-extern void sort_by_score(int *idxV, int *scrV);
+-extern int deaths(int warnum);
++extern long score(long warnum);
++extern void sort_by_score(long *idxV, long *scrV);
++extern long deaths(long warnum);
+ extern void results(FILE * outp);
+ extern void sort_by_score();
+ extern void Exit(int code);
+diff -ruN pmars-0.9.4/src/global.h.orig pmars-0.9.4-modified/src/global.h.orig
+--- pmars-0.9.4/src/global.h.orig	1969-12-31 19:00:00.000000000 -0500
++++ pmars-0.9.4-modified/src/global.h.orig	2022-07-04 14:55:37.000000000 -0400
+@@ -0,0 +1,516 @@
++/* pMARS -- a portable Memory Array Redcode Simulator
++ * Copyright (C) 1993-1996 Albert Ma, Na'ndor Sieben, Stefan Strack and Mintardjo Wangsawidjaja
++ * Copyright (C) 2000 Ilmari Karonen
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ */
++
++/*
++ * global.h: global header
++ * $Id: global.h,v 1.5 2000/12/25 00:56:41 iltzu Exp $
++ *
++ * 10-23-98 Pentium optimized version 30% faster than the original
++ *          Ken Espiritu   (kespirit@cesun1.ce.vt.edu)
++ */
++
++#include "config.h"
++#include <stdio.h>
++#ifndef INT_MAX
++#include <limits.h>
++#endif
++#if defined(__STDC__) || defined(__MSDOS__)
++#include <stdlib.h>
++#endif
++
++/* *********************************************************************
++   System dependent definitions or declarations
++   ********************************************************************* */
++
++/* Generic Pointer type */
++#if defined(NEW_STYLE)
++typedef void *pointer_t;
++#else
++typedef char *pointer_t;
++#endif
++
++#if defined(DOS16)
++
++/* ***** Turbo C FAR model ***** */
++#if defined(__TURBOC__)
++
++#include <alloc.h>
++#define MALLOC(x)     malloc((size_t)(x))
++#define REALLOC(x, y) realloc((pointer_t)(x), (size_t)(y))
++#define FREE(x)       free((pointer_t)(x))
++
++#endif                                /* __TURBOC__ */
++
++
++/* ***** Microsoft/Quick C FAR model ***** */
++#if defined(_MSC_VER)
++
++/* Need to test these predefined macros */
++#include <malloc.h>
++
++#define MALLOC(x)     _fmalloc((size_t)(x))
++#define REALLOC(x, y) _frealloc((pointer_t)(x), (size_t)(y))
++#define FREE(x)       _ffree((pointer_t)(x))
++
++#define DOSFARMODEL
++
++#endif                                /* _MSC_VER */
++
++#endif                                /* DOS16 */
++
++
++/***** Others which don't have MALLOC() defined. *****/
++
++#if !defined(MALLOC)
++
++#define MALLOC(x)     malloc((size_t)(x))
++#define REALLOC(x, y) realloc((pointer_t)(x), (size_t)(y))
++#define FREE(x)       free((pointer_t)(x))
++
++#endif                                /* ! MALLOC */
++
++/***** Miscellaneous *****/
++
++/* Some old compilers do not have NULL defined */
++#ifndef NULL
++
++#ifdef DOSFARMODEL
++#define NULL 0L
++#else
++#define NULL 0
++#endif                                /* DOSFARMODEL */
++
++#endif                                /* NULL */
++
++/* unsigned types (renamed to avoid conflict with possibly predefined types) */
++typedef unsigned char uChar;
++typedef unsigned short uShrt;
++typedef unsigned long uLong;
++
++/* FALSE, TRUE */
++#ifndef TRUE
++enum {
++  FALSE, TRUE
++};
++#endif
++
++/* global error output macro */
++#ifdef MACGRAPHX
++#define errout(s) macputs(s)
++#else
++#define errout(s) fputs(s,stderr)
++#endif
++
++/* ************************************************************************
++   pmars global structures and definitions
++   ************************************************************************ */
++
++#if defined(__STDC__)  || defined(DOS16)
++#define NEW_STYLE
++#endif
++
++/* Version and date */
++
++#define PMARSVER  94
++#define PMARSDATE "04/07/22"
++
++#ifdef VMS                        /* Must change codes to work with VMS error
++                                 * handling */
++extern  PMARS_FATAL, PMARS_BADCOMLIN, PMARS_PARSEERR;
++#define GRAPHERR   1                /* no grphx yet */
++#define NOT386     1                /* if this error occurs, I don't wanna hear
++                                 * about it. */
++#define MEMERR   292                /* %SYS-E-INSFMEM */
++#define SERIOUS  &PMARS_FATAL        /* %PMARS-F-FATAL */
++#define FNOFOUND 98962                /* %RMS-E-FNF */
++#define CLP_NOGOOD &PMARS_BADCOMLIN        /* %PMARS-E-BADCOMLIN */
++#define PARSEERR &PMARS_PARSEERR/* ENDABORT */
++#define USERABORT 44                /* %SYS-E-ABORT */
++#else                                /* everyone else */
++/* return code:
++   0: success
++   Negative number: System error such as insufficient space, etc
++   Positive number: User error such as number too big, file not found, etc */
++#define GRAPHERR  -4                /* graphic error */
++#define NOT386    -3                /* trying to execute 386 code on lesser
++                                 * machine */
++#define MEMERR    -2                /* insufficient memory, cannot free, etc. */
++#define SERIOUS   -1                /* program logic error */
++#define FNOFOUND   1                /* File not found */
++#define CLP_NOGOOD 2                /* command line argument error */
++#define PARSEERR   3                /* File doesn't assemble correctly */
++#define USERABORT  4                /* user stopped program from cdb, etc. */
++#endif
++
++/* these are used as return codes of internal functions */
++#define SUCCESS    0
++#define WARNING    0
++
++/* used by eval.c */
++#define OVERFLOW  1
++#define OK_EXPR   0
++#define BAD_EXPR -1
++#define DIV_ZERO -2
++
++/* used by cdb.c */
++#define NOBREAK 0
++#define BREAK   1
++#define STEP    2
++
++#define SKIP    1                /* cmdMod settings for cdb: skip next command */
++#define RESET   2                /* clear command queue */
++
++#define UNSHARED -1                /* P-space is private */
++#define PIN_APPEARED -2
++
++/* used by sim.c and asm.c */
++#ifdef NEW_MODES
++#define INDIR_A(x) (0x80 & (x))
++#define RAW_MODE(x) (0x7F & (x))
++#define SYM_TO_INDIR_A(x) ( ((x) - 3) | 0x80)        /* turns index into
++                                                 * addr_sym[] to INDIR_A code */
++#define INDIR_A_TO_SYM(x) ( RAW_MODE(x) + 3 )        /* vice versa */
++#endif
++
++/* used by many */
++#define STDOUT stdout
++
++#ifdef DOS16
++#define MAXCORESIZE   8192
++#else
++#ifdef SMALLMEM
++#define MAXCORESIZE   65535
++#else
++#define MAXCORESIZE   ((INT_MAX>>1)+1)
++#endif
++#endif
++
++#define MAXTASKNUM    INT_MAX
++#define MAXROUND      INT_MAX
++#define MAXCYCLE      LONG_MAX
++#ifdef DOS16
++#define MAXWARRIOR         8
++#else
++#define MAXWARRIOR        36
++#endif
++#define MAXINSTR         1000
++
++#define MAXSEPARATION MAXCORESIZE/MAXWARRIOR
++
++#define MAXALLCHAR 8000
++
++/* The following holds the order in which opcodes, modifiers, and addr_modes
++   are represented as in parser. The enumerated field should start from zero */
++enum addr_mode {
++  IMMEDIATE,                        /* # */
++  DIRECT,                        /* $ */
++  INDIRECT,                        /* @ */
++  PREDECR,                        /* < */
++  POSTINC                        /* > */
++};
++
++enum op {
++  MOV, ADD, SUB, MUL, DIV, MOD, JMZ,
++  JMN, DJN, CMP, SLT, SPL, DAT, JMP,
++  SEQ,  SNE, NOP, LDP, STP
++};                                /* has to match asm.c:opname[] */
++
++enum modifier {
++  mA,                                /* .A */
++  mB,                                /* .B */
++  mAB,                                /* .AB */
++  mBA,                                /* .BA */
++  mF,                                /* .F */
++  mX,                                /* .X */
++  mI                                /* .I */
++};
++
++
++#ifdef SMALLMEM
++typedef unsigned short ADDR_T;
++#define ISNEG(x) ((x)==0xFFFF)        /* use for unsigned ADDR_T */
++#else
++typedef int ADDR_T;
++#define ISNEG(x) ((x)<0)
++#endif
++
++typedef unsigned char FIELD_T;
++#ifdef DOS16
++typedef unsigned long U32_T;        /* unsigned long (32 bits) */
++typedef long S32_T;
++#else
++typedef unsigned int U32_T;        /* unsigned int (32 bits) */
++typedef int S32_T;
++#endif
++
++/* Memory structure */
++typedef struct mem_struct {
++  ADDR_T  A_value, B_value;
++  FIELD_T opcode;
++  FIELD_T A_mode, B_mode;
++  FIELD_T debuginfo;
++
++}       mem_struct;
++
++/* Warrior structure */
++typedef struct warrior_struct {
++  long    pSpaceIDNumber;
++#ifdef DOS16
++  ADDR_T far *taskHead, far * taskTail;
++#else
++  ADDR_T *taskHead, *taskTail;
++#endif
++  int     tasks;
++  ADDR_T  lastResult;
++  int     pSpaceIndex;
++  ADDR_T  position;                /* load position in core */
++  int     instLen;                /* Length of instBank */
++  int     offset;                /* Offset value specified by 'ORG' or 'END'.
++                                 * 0 is default */
++  short   score[MAXWARRIOR * 2 - 1];
++
++  char   *name;                        /* warrior name */
++  char   *version;
++  char   *date;
++  char   *fileName;                /* file name */
++  char   *authorName;                /* author name */
++  mem_struct *instBank;
++
++  struct warrior_struct *nextWarrior;
++
++}       warrior_struct;
++
++/* ***********************************************************************
++   pmars global variable declarations
++   *********************************************************************** */
++
++extern int errorcode;
++extern int errorlevel;
++extern char errmsg[MAXALLCHAR];
++
++/* Some parameters */
++extern int warriors;
++extern ADDR_T coreSize;
++extern int taskNum;
++extern ADDR_T instrLim;
++extern ADDR_T separation;
++extern int rounds;
++extern long cycles;
++
++#ifdef RWLIMIT
++extern ADDR_T readLimit;
++extern ADDR_T writeLimit;
++#endif
++
++
++extern int cmdMod;
++extern S32_T seed;
++extern int useExtRNG;
++
++extern int SWITCH_b;
++extern int SWITCH_e;
++extern int SWITCH_k;
++extern int SWITCH_8;
++extern int SWITCH_f;
++extern char *SWITCH_F;
++extern ADDR_T SWITCH_Fnum;	/* an integer value of the -F parameter */
++extern int SWITCH_V;
++extern int SWITCH_o;
++extern int SWITCH_Q;
++extern char *SWITCH_eq;
++#ifdef VMS
++extern int SWITCH_D;
++#endif
++#ifdef PERMUTATE
++extern int SWITCH_P;
++#endif
++extern int SWITCH_A;
++
++extern int inCdb;
++extern int debugState;
++extern int copyDebugInfo;
++#if defined(DOSTXTGRAPHX) || defined(DOSGRXGRAPHX) || defined(LINUXGRAPHX) \
++    || defined(XWINGRAPHX)
++extern int inputRedirection;
++#endif
++#if defined(XWINGRAPHX)
++extern int xWinArgc;
++extern char **xWinArgv;
++#endif
++extern mem_struct INITIALINST;        /* initialize to DAT.F $0,$0 */
++
++extern warrior_struct warrior[MAXWARRIOR];
++#ifdef DOS16
++extern ADDR_T far *pSpace[MAXWARRIOR];
++#else
++extern ADDR_T *pSpace[MAXWARRIOR];
++#endif
++extern ADDR_T pSpaceSize;
++
++/* ***********************************************************************
++   display define's, declarations and typedefs
++   *********************************************************************** */
++
++#if defined(DOSTXTGRAPHX) || defined(DOSGRXGRAPHX) || defined(LINUXGRAPHX) \
++    || defined(XWINGRAPHX)
++
++#if !defined(LINUXGRAPHX)        /* vga.h already defines TEXT to be 0 */
++#define         TEXT 0
++#endif
++#define         GRX 1
++#define         SPEEDLEVELS 9
++#define         NORMAL_ATTR 0x0700
++extern int displayLevel;
++extern int displayMode;
++extern int displaySpeed;
++extern int SWITCH_v;
++
++#if defined(LINUXGRAPHX)        /* needed for correct keyboard handling */
++extern struct termios tio_orig;
++extern int console_fd;
++#endif
++
++#if defined(CURSESGRAPHX)
++#include <curses.h>
++#if defined(A_NORMAL) || defined(A_BOLD) || defined(A_REVERSE)
++#define ATTRIBUTE
++#endif                                /* A_* */
++
++extern int refreshInterval;
++extern int refIvalAr[SPEEDLEVELS];
++
++#else
++
++extern int keyDelay;
++extern int keyDelayAr[SPEEDLEVELS];
++extern unsigned long loopDelay;
++extern unsigned long loopDelayAr[SPEEDLEVELS];
++
++#endif                                /* CURSESGRAPHX */
++#endif                                /* DOSTXTGRAPHX and DOSGRXGRAPHX and
++                                 * LINUXGRAPHX */
++
++
++/* ***********************************************************************
++   function prototypes
++   *********************************************************************** */
++
++#ifdef NEW_STYLE
++
++extern int
++        parse_param(int argc, char *argv[]);
++extern int eval_expr(char *expr, long *result);
++extern int assemble(char *fName, int aWarrior);
++extern void disasm(mem_struct * cells, ADDR_T n, ADDR_T offset);
++extern void simulator1(void);
++extern char *locview(ADDR_T loc, char *outp);
++extern int cdb(char *msg);
++extern int score(int warnum);
++extern void sort_by_score(int *idxV, int *scrV);
++extern int deaths(int warnum);
++extern void results(FILE * outp);
++extern void sort_by_score();
++extern void Exit(int code);
++extern void reset_regs(void);
++extern void set_reg(char regChr, long val);
++
++#if defined(DOSTXTGRAPHX) || defined(DOSGRXGRAPHX) || defined(LINUXGRAPHX) \
++    || defined(XWINGRAPHX)
++extern void decode_vopt(int option);
++#ifndef LINUXGRAPHX
++extern void grputs(char *str);
++extern void aputs5(char *str, int attribute);
++#endif
++
++#if defined(LINUXGRAPHX)
++extern char *svga_gets(char *s, int maxstr);
++extern void svga_puts(char *s);
++extern void svga_display_close(int wait);
++extern void svga_write_menu(void);
++extern void svga_open_graphics(void);
++extern void svga_clear(void);
++extern void svga_update(int curPanel);
++extern void svga_clear_arena(void);
++extern int svga_getch(void);
++#endif
++
++#if defined(XWINGRAPHX)
++extern void xWin_puts(char *s);
++extern void xWin_write_menu(void);
++extern void xWin_clear(void);
++extern void xWin_update(int curPanel);
++extern void xWin_display_close(int wait);
++extern char *xWin_gets(char *s, int maxstr);
++extern void xWin_resize(void);
++#endif
++#endif
++
++#ifdef DOS16
++extern char *cellview(mem_struct far * cell, char *outp, int emptyDisp);
++#else
++extern char *cellview(mem_struct * cell, char *outp, int emptyDisp);
++#endif
++
++#else
++
++extern int
++        parse_param();
++extern int
++        eval_expr();
++extern int assemble();
++extern void disasm();
++extern void simulator1();
++extern char *locview();
++extern char *cellview();
++extern int cdb();
++extern int score();
++extern int deaths();
++extern void results();
++extern void Exit();
++extern void reset_regs();
++extern void set_reg();
++
++#if defined(CURSESGRAPHX)
++extern void decode_vopt();
++extern void aputs5();
++#endif
++
++#if defined (LINUXGRAPHX)
++extern char *svga_gets();
++extern void svga_puts();
++extern void svga_display_close();
++extern void svga_write_menu();
++extern void svga_open_graphics();
++extern void svga_clear();
++extern void svga_update();
++extern void svga_clear_arena();
++extern int svga_getch();
++#endif
++
++#if defined(XWINGRAPHX)
++extern void xWin_puts();
++extern void xWin_write_menu();
++extern void xWin_clear();
++extern void xWin_update();
++extern void xWin_display_close();
++extern char *xWin_gets();
++extern void xWin_resize();
++#endif
++
++#endif
+Binary files pmars-0.9.4/src/global.o and pmars-0.9.4-modified/src/global.o differ
+Binary files pmars-0.9.4/src/pmars and pmars-0.9.4-modified/src/pmars differ
+Binary files pmars-0.9.4/src/pmars.o and pmars-0.9.4-modified/src/pmars.o differ
+Binary files pmars-0.9.4/src/pos.o and pmars-0.9.4-modified/src/pos.o differ
+Binary files pmars-0.9.4/src/sim.o and pmars-0.9.4-modified/src/sim.o differ
+Binary files pmars-0.9.4/src/str_eng.o and pmars-0.9.4-modified/src/str_eng.o differ
+Binary files pmars-0.9.4/src/token.o and pmars-0.9.4-modified/src/token.o differ
