@@ -6,7 +6,7 @@ diff -ruN pmars-0.9.4/src/Makefile pmars-0.9.4-modified/src/Makefile
  # (9)   -DRWLIMIT                           enables read/write limits
  
 -CFLAGS = -O -DEXT94 -DXWINGRAPHX -DPERMUTATE -DRWLIMIT 
-+CFLAGS = -O -DEXT94 -DSERVER -DPERMUTATE -DRWLIMIT 
++CFLAGS = -O -DEXT94 -DSERVER -DPERMUTATE -DRWLIMIT -fpermissive 
  LFLAGS = -x
  # LIB = -lcurses -ltermlib		# enable this one for curses display
  # LIB = -lvgagl -lvga			# enable this one for Linux/SVGA
@@ -18,7 +18,7 @@ diff -ruN pmars-0.9.4/src/Makefile.djg pmars-0.9.4-modified/src/Makefile.djg
  # (4)   -DSMALLMEM                          16-bit addresses, less memory
  # (5)   -DPERMUTATE                         enables -P switch
 -CFLAGS = -O2 -m486 -DGRAPHX -DEXT94 -DPERMUTATE
-+CFLAGS = -O2 -DSERVER -DEXT94 -DPERMUTATE
++CFLAGS = -O2 -DSERVER -DEXT94 -DPERMUTATE -fpermissive
  # only tested with PDCurses (-lcurses)
 -LIB = -lgrx -lpc
 +#LIB = -lgrx -lpc
