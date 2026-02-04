@@ -24,7 +24,7 @@ To patch put in same directory as the directory of the src directory <br />
 patch -p1 < pmars-msys2.diff <br />
 
 For pmars 0.9.5: <br />
-To patch the directory the source should be unextracted is pmars. <br />
+To patch. <br />
 Put pmars-0.9.5.diff in the same directory as pmars directory. <br />
 Then <br />
 $ patch -p1 < pmars-0.9.5.diff <br />
